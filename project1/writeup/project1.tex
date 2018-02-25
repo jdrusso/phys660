@@ -1,0 +1,81 @@
+\pdfoutput=1
+\documentclass[pra,twocolumn,showpacs,amsmath,amssymb]{revtex4-1}
+
+\usepackage{graphicx}%Include figure files
+\usepackage{dcolumn}%Align table columns on decimal point
+\usepackage{bm}% bold math
+
+%\nofiles
+
+\begin{document}
+
+\title{Project 1: Modelling Radioactive Decay}
+
+
+\author{John Russo}
+\affiliation{Department of Physics and Astronomy, University
+of Delaware, Newark, DE 19716-2570, USA}
+
+\begin{abstract}
+Abstract goes here.
+\end{abstract}
+
+\pacs{}
+
+
+\maketitle
+
+\section{Introduction} \label{sec:intro}
+
+Modelling radioactive decay involves only a simple numerical solution to a
+differential equation. However, it is a useful demonstration of basic numerical
+solving techniques, with a wide range of applications.
+Radioactive decay is a stochastic process where a nucleus breaks down, releasing
+energy, matter, or both, depending on the type of decay.
+Radioactive decay is a process studied for applications from nuclear weapons to
+carbon dating, where understanding decay rates of isotopes can yield information
+about age of a sample.
+
+\section{Method}
+
+\section{Results}
+
+For all results presented here, $N_A = 200, N_B = 5, \tau_A = 0.5$ and $\tau_B = 1.0$.
+
+\begin{figure}
+  \vspace{2ex}
+  \includegraphics[width=\linewidth]{../plot.pdf}
+  \caption{A and B particle populations, plotted against arbitrary time. Using
+  a shared linear axis, the large difference in population sizes makes
+  visualization of the data difficult.}
+  \label{fig:linplot}
+\end{figure}
+
+\begin{figure}
+  \vspace{2ex}
+  \includegraphics[width=\linewidth]{../logplot.pdf}
+  \caption{A and B particle populations, plotted against arbitrary time. The log
+  scale shows that though the populations decay at very different rates, the
+  linearity of each population's trajectory demonstrates exponential decay.}
+  \label{fig:logplot}
+\end{figure}
+
+In these figures, and particularly in Fig.~\ref{fig:linplot} one can observe the
+B particle population sharply peaking before beginning its decline. When the
+A population satisfies
+\begin{equation}
+\frac{N_A}{N_B} \geq \frac{\tau_A N_{B,0}}{\tau_B N_{A,0}}
+\end{equation}
+the growth rate of the B population is positive. For the given initial parameters,
+this means the B population should start declining when $N_A/N_B \geq 0.0125$.
+
+Observing the turnaround time here to be when the $N_B \approx 4000$,
+we can see in Fig.~\ref{fig:logplot} that at that time $N_A \approx 50$.
+
+\section{Conclusions} \label{sec:conclusion}
+
+\begin{thebibliography}{1}
+
+\end{thebibliography}
+
+\end{document}
