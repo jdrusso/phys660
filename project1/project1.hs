@@ -16,7 +16,7 @@ a_0 = 200.0 :: Double
 b_0 = 5.0 :: Double
 ra_0 = 150.0 :: Double
 rb_0 = 0.0 :: Double
-tA = 1 :: Double
+tA = 5 :: Double
 tB = 1 :: Double
 
 
@@ -51,8 +51,8 @@ main = do
 
   let t_max = 10.0
   let dt = 1
-  let thepops = transpose $ pops t_max dt
-  -- let thepops = transpose $ crossover t_max dt
+  -- let thepops = transpose $ pops t_max dt
+  let thepops = transpose $ crossover t_max dt
 
 
 
@@ -69,7 +69,10 @@ main = do
     (defaultStyle{lineSpec=CustomStyle [LineType 3, LineTitle "N_B", LineWidth 10]}, zip [0,dt..] (thepops!!1))]
   --
   plotPathsStyle (attrib ++ [EPS "plot.eps",
-    Custom "key font \",18\"; set tics font \",18\"" []
+    Custom ("key font \",36\"; set tics font \",36\";" ++
+    "set ylabel offset -7; set xlabel offset 0,-1; set lmargin 16; set bmargin 5; set tmargin 2;"++
+    "set yrange [-0:150]; set ytics (200,150,100,50,0,-50);"++
+    "set xrange [0:6]; set xtics (0, 2, 4, 6, 8, 10)") []
     -- ,Title ("Radioactive Atom Populations vs Time (tau_A: " ++ show tA ++ ", tau_B: " ++ show tB ++ ")")
     ])$
 

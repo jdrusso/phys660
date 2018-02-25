@@ -21,10 +21,16 @@
 of Delaware, Newark, DE 19716-2570, USA}
 
 \begin{abstract}
-Abstract goes here.
+Radioactive decay and resonance are numerically modeled using an Euler method
+approach and compared to the exact solutions.
+Stability of the numerical solutions to the radioactive decay problem are analyzed
+for different timestep lengths. Dependence of long-term behavior of the $B$
+population on the ratio of the populations' e-folding times \trel~is explored.
+The long-term behavior of the resonant system is examined, and steady-state
+behavior is confirmed.
 \end{abstract}
 
-\pacs{}
+\pacs{23.90.+w}
 
 
 \maketitle
@@ -44,7 +50,7 @@ Radioactive decay is a process studied for applications from nuclear weapons to
 carbon dating, where understanding decay rates of isotopes can yield information
 about age of a sample.
 
-
+[TODO]: Findings of paper here
 
 
 
@@ -77,11 +83,22 @@ These equations can be normalized to
 
 where bars indicate the normalized variables.
 
-Numerical solutions are obtained by Euler stepping with a fixed time interval $dt$.
+Numerical solutions are obtained by using the Euler method with a fixed time
+interval $dt$. $dt$ will be varied to explore the stability of different length
+time steps. Exact solutions are obtained by analytically solving the differential
+equations of the populations in Mathematica for the given initial conditions
+and plotting the solutions.
+
+All numerical simulations of this system are performed with
+$N_A (t=0) = 200$ and $N_B (t=0) = 5$. $dt$ for the stable simulations is chosen
+to be $0.1$, but varied between higher values to explore instabilities/
 
 \subsection{Part II - Resonance}
 
 In Part II a system is analyzed where $B$ nuclei decay back into $A$ nuclei.
+Since each species of nucleus can now decay into the other, this is no longer
+truly a radioactive decay problem. This is more analogous to a resonance or
+tunnelling problem, where particles tunnel between two states with equal energy.
 This system is described by
 
 \begin{align}
@@ -96,22 +113,52 @@ which are normalized to
   \frac{d \bar N_B}{d \bar t} &=  \bar N_A - \frac{1}{2} \bar N_B \label{eq:res_B_norm}.
 \end{align}
 
-
+This system is simulated with $dt=0.1$, $N_A(0)=150$, and $N_B(0)=0$.
 
 
 
 \section{Results}
 
-\subsection{Part I}
+\subsection{Part I - Radioactive Decay}\label{sec:decay}
 
-Varying the parameter \trel~demonstrates its affect on the
+Numerical solutions to the population equations from radioactive decay
+ are shown in Fig.~\ref{fig:numerical} and can be compared to
+a plot of the analytical solution to the differential equations of the systems
+in Fig.~\ref{fig:analytical} to confirm accuracy of the numerical solutions.
+
+Varying the parameter \trel~demonstrates its effect on the
 system's transient and steady state behavior.
+As can be seen in Eq.~\ref{eq:decay_B_norm}, the ratio
+ \trel~only affects the decay of the $B$ population. The $A$
+ population's rate of decay is determined solely by the size of the $A$ population.
 
-Examining Eqs.~\ref{eq:decay_A_norm} and \ref{eq:decay_B_norm}, the ratio
- \trel~only affects the decay of the $B$ population, whereas the $A$
- population's decay is affected solely by the size of the $A$ population.
- %
-This is consistent with Figs.~\ref{fig:tau_gt_1}-\ref{fig:tau_lt_1}, which show
+
+ \begin{figure}
+   \begin{subfigure}{.7\linewidth}
+     \includegraphics[width=\linewidth]{t_gt_1.pdf}
+     \caption{$\tau_A / \tau_B=5$}
+     \label{fig:tau_gt_1}
+   \end{subfigure}
+ ~
+   \begin{subfigure}{.7\linewidth}
+     \includegraphics[width=\linewidth]{t_eq_1.pdf}
+     \caption{$\tau_A / \tau_B=1$}
+     \label{fig:tau_eq_1}
+   \end{subfigure}
+ ~
+   \begin{subfigure}{.7\linewidth}
+     \includegraphics[width=\linewidth]{t_lt_1.pdf}
+     \caption{$\tau_A / \tau_B=0.2$}
+     \label{fig:tau_lt_1}
+   \end{subfigure}
+
+   \caption{Numerical solutions of $A$ and $B$ nucleus populations for various values of \trel.
+   All figures generated with $dt=0.1$. Semilog axes are used to highlight the
+   exponential decay of the populations.}
+   \label{fig:numerical}
+ \end{figure}
+
+This is demonstrated in Figs.~\ref{fig:tau_gt_1}-\ref{fig:tau_lt_1}, which show
 the $A$ population decaying at a constant rate regardless of the value of \trel.
 These plots also show that decreasing \trel~decreases the slope of $N_B$,
 in other words slowing the decay rate of the $B$ population.
@@ -120,31 +167,46 @@ Physically, this means that if the $B$ population has a longer e-folding time,
 meaning it is more stable than the $A$ population, then the $B$ population decays
 more slowly than the $A$ population.
 
+Although varying \trel~changes the rate of decay of the $B$ population, each
+regime exhibits qualitatively similar behavior. The $A$ population continuously
+experiences exponential decay, while the $B$ population initially spikes before
+beginning to exponentially decay. The initial spike in the $B$ population is
+physically described by the initial population of $A$ nuclei rapidly decaying
+into $B$ nuclei. Since the rate of decay of $A$ nuclei is also the rate of creation
+of $B$ nuclei, the decay of $A$ initially outweighs the decay of $B$, and the $B$
+population experiences a net growth.
+As the population of $A$ nuclei approaches 0, however, fewer $A$ nuclei
+are available to decay into $B$ nuclei, and the rate of creation of new $B$
+particles decreases. Eventually, it falls below the rate of decay of $B$, and
+the $B$ population begins its decay.
+
+
 \begin{figure}
-  \begin{subfigure}[t]{.7\linewidth}
-    \includegraphics[width=\linewidth]{t_gt_1.pdf}
+  \begin{subfigure}{.7\linewidth}
+    \includegraphics[width=\linewidth]{num_tgt1.pdf}
     \caption{$\tau_A / \tau_B=5$}
     \label{fig:tau_gt_1}
   \end{subfigure}
 ~
-  \begin{subfigure}[t]{.7\linewidth}
-    \includegraphics[width=\linewidth]{t_eq_1.pdf}
+  \begin{subfigure}{.7\linewidth}
+    \includegraphics[width=\linewidth]{num_teq1.pdf}
     \caption{$\tau_A / \tau_B=1$}
     \label{fig:tau_eq_1}
   \end{subfigure}
 ~
-  \begin{subfigure}[t]{.7\linewidth}
-    \includegraphics[width=\linewidth]{t_lt_1.pdf}
+  \begin{subfigure}{.7\linewidth}
+    \includegraphics[width=\linewidth]{num_tlt1.pdf}
     \caption{$\tau_A / \tau_B=0.2$}
     \label{fig:tau_lt_1}
   \end{subfigure}
 
-  \caption{$A$ and $B$ nucleus populations for various values of \trel.
-  All figures generated with $dt=0.1$. Semilog axes are used to highlight the
+  \caption{Analytical solutions of $A$ and $B$ nucleus populations for various values of \trel.
+  As in Fig.~\ref{fig:numerical}, semilog axes are used to highlight the
   exponential decay of the populations.}
+  \label{fig:analytical}
 \end{figure}
 
-\subsubsection{Stability Analysis}
+\subsubsection{Stability Analysis}\label{sec:stability}
 
 It is also interesting to analyze the stability of this numerial analysis for
 different timestep lengths $dt$. In Figs.~\ref{fig:tau_gt_1}-\ref{fig:tau_lt_1},
@@ -153,83 +215,111 @@ by $\tau_A$ and $\tau_B$. As a result, we observe smooth curves, without obvious
 inaccuracies caused by numerical instability.
 
 Additionally, we can note that the most rapid change in the system occurs between
-roughly $t=0$ to $t=1$, after which $N_B$ settles into a constant
+$t=0$ to $t=1$, after which $N_B$ settles into a constant
 rate of exponential decay. So, while $dt$ is short enough to capture the dynamics
 of this time, i.e. smaller than order $1$, we expect stable results.
 
-We can verify this by varying the timestep length about 1. In
-
-\begin{figure}[h!]
-  \begin{subfigure}[t]{.8\linewidth}
+\begin{figure}
+  \begin{subfigure}{.8\linewidth}
     \includegraphics[width=\linewidth]{t_eq_1_unstable.pdf}
-    \caption{ With $dt=0.9$, and so on the order of the initial change in the system, instability in the
-    numerical analysis over the first step causes the system to decay much faster
-    than it should.}
+    % \caption{ With $dt=0.9$,
+    % instability in analysis causes the system to decay abnormally quickly.}
+    \caption{ $dt = 0.9$ }
     \label{fig:tau_eq_1_unstable}
   \end{subfigure}
 
-  \begin{subfigure}[t]{.8\linewidth}
+  \begin{subfigure}{.8\linewidth}
     \includegraphics[width=\linewidth]{t_eq_1_vunstable.pdf}
-    \caption{With $dt=1.0$,
-    $dt$ is greater than the timescale over which change occurs,
-    the instability is even more prominent, and the populations immediately go
-    to 0.}
+    % \caption{With $dt=1.0$, instability is even more prominent, and populations immediately go
+    % to 0.}
+    \caption{$dt=1.0$}
     \label{fig:tau_eq_1_vunstable}
   \end{subfigure}
 
   \caption{Plots of \trel~$ = 1$ as in Fig.~\ref{fig:tau_eq_1} with $dt$ varied
-  to demonstrate instability in numerical analysis.}
+  to demonstrate instability in numerical analysis. Setting $dt$ to the
+  order of \trel~introduces an instability that causes
+  the populations to drop to 0 abnormally quickly.}
+\end{figure}
+
+We can verify this by varying the timestep length about \trel. In Fig.~\ref{fig:tau_eq_1_unstable}
+$dt$ is set to $0.9$, just slightly below the timescale on which the initial increase
+in the $B$ population occurs. Compared to Fig.~\ref{fig:tau_eq_1}, the decay
+is much quicker, and the initial growth of $B$ is linear rather than damped
+decreasing exponential growth.
+
+Fig.~\ref{fig:tau_eq_1_vunstable} shows an even more exaggerated example of this,
+where $dt = \tau_A / \tau_B$. In this case, when the second step of the simulation
+is calculated, the long time step and negative first derivatives from the initial
+conditions bring both populations to 0.
+
+Another type of instability exists only the $\tau_A / \tau_B > 1$ case.
+Shown in Fig.~\ref{fig:tgt1_unstable}, this oscillatory instability only appears
+in this particular regime of \trel. This is particularly unphysical, since it
+describes a negative population of $B$ nuclei. Here, this instability is present
+in approximately the range $.35 < dt < .5$, below which the model is stable,
+and above which it exhibits the same sharp instability present in Fig.~\ref{fig:tau_eq_1_vunstable}.
+
+\begin{figure}
+  \includegraphics[width=.8\linewidth]{tgt1_osc.pdf}
+  \caption{Oscillatory instability in the numerical solution when \trel$=5$
+  and $dt=0.4$.}
+  \label{fig:tgt1_unstable}
 \end{figure}
 
 
-% I analyze three main cases for these populations based on the ratio
-% $\tau_A / \tau_B$, which governs steady-state behavior of the system.
-%
-% \subsubsection{$\tau_A / \tau_B > 1$}
-%
-%
-% \subsubsection{$\tau_A / \tau_B = 1$}
-%
-%
-% \subsubsection{$\tau_A / \tau_B < 1$}
 
+\subsection{Part II - Resonance}\label{sec:resonance}
 
-% For all results presented here, $N_A = 200, N_B = 5, \tau_A = 0.5$ and $\tau_B = 1.0$.
-%
-% \begin{figure}
-%   \vspace{2ex}
-%   \includegraphics[width=\linewidth]{../plot.pdf}
-%   \caption{A and B particle populations, plotted against arbitrary time. Using
-%   a shared linear axis, the large difference in population sizes makes
-%   visualization of the data difficult.}
-%   \label{fig:linplot}
-% \end{figure}
-%
-% \begin{figure}
-%   \vspace{2ex}
-%   \includegraphics[width=\linewidth]{../logplot.pdf}
-%   \caption{A and B particle populations, plotted against arbitrary time. The log
-%   scale shows that though the populations decay at very different rates, the
-%   linearity of each population's trajectory demonstrates exponential decay.}
-%   \label{fig:logplot}
-% \end{figure}
-%
-% In these figures, and particularly in Fig.~\ref{fig:linplot} one can observe the
-% B particle population sharply peaking before beginning its decline. When the
-% A population satisfies
-% \begin{equation}
-% \frac{N_A}{N_B} \geq \frac{\tau_A N_{B,0}}{\tau_B N_{A,0}}
-% \end{equation}
-% the growth rate of the B population is positive. For the given initial parameters,
-% this means the B population should start declining when $N_A/N_B \geq 0.0125$.
-%
-% Observing the turnaround time here to be when the $N_B \approx 4000$,
-% we can see in Fig.~\ref{fig:logplot} that at that time $N_A \approx 50$.
+Examining the resonant system shows a different behavior, where a nonzero
+steady state is reached for the populations. Eqs.~\ref{eq:res_A_norm} and
+\ref{eq:res_B_norm} show that the $N_B$ population has twice the e-folding time of
+the $N_A$ population, evidenced by the $2 \tau$ in the denominator of the $N_B$
+terms. We can see that the time derivatives of each population is equal to 0
+when $N_B = 2 N_A$, indicating the populations have reached their equilibrium
+states.
 
-\subsection{Part II}
+We see this manifested in Figs.~\ref{fig:resonance} and \ref{fig:analyt_resonance},
+where the $N_B$ population is stably twice that of the $N_A$ population at long times.
+Particles tunnel out of the $A$ state more rapidly than the $B$ state, leaving
+fewer particles in the $A$ state at any time.
+
+\begin{figure}
+
+  \includegraphics[width=.8\linewidth]{resonance.pdf}
+  \caption{Numerical solution to the resonance problem. The system exhibits steady
+  state behavior when $N_B = 2 N_A$.}
+  \label{fig:resonance}
+\end{figure}
+\begin{figure}
+
+  \includegraphics[width=.8\linewidth]{analyt_res.pdf}
+  \caption{Exact solution to the resonance problem. The same steady
+  state behavior where $N_B = 2 N_A$ as in Fig.~\ref{fig:resonance} is visible.}
+  \label{fig:analyt_resonance}
+\end{figure}
 
 
 \section{Conclusions} \label{sec:conclusion}
+
+In Section~\ref{sec:decay}, numerical solutions to a radioactive decay problem
+are examined in three different regimes of \trel. The normalized equations
+Eqs.~\ref{eq:decay_A_norm} and \ref{eq:decay_B_norm} indicate that the $A$ population
+has no dependence on \trel, and that the $B$ population's rate of decay will
+decrease as \trel~decreases. This is examined and confirmed in the cases where \trel$<1$,
+\trel$=1$, and \trel$>1$.
+
+The stability of the numerical solutions to the radioactive decay problem is
+investigated in Section~\ref{sec:stability}. For \trel$<=0$, the solution is
+stable when $dt$ is smaller than the order of \trel. For \trel$>0$, an
+oscillatory instability is also present for a certain range of $dt$. Below this
+range, the solution is stable, and above this, the same instability as before exists.
+
+Finally, a resonant system where particles tunnel between two energy states
+is modelled in Section~\ref{sec:resonance}. It is found that the system reaches
+a steady state where $N_B = 2 N_A$. Examining Eqs.~\ref{eq:res_A_norm} and
+\ref{eq:res_B_norm} which describe this system, we confirm that the time
+derivatives of each population go to 0 when $N_B = 2 N_A$.
 
 \begin{thebibliography}{1}
 
