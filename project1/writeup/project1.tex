@@ -5,6 +5,7 @@
 \usepackage{dcolumn}%Align table columns on decimal point
 \usepackage{bm}% bold math
 \usepackage{subcaption}
+\usepackage{url}
 
 
 %\nofiles
@@ -45,13 +46,38 @@ Modelling radioactive decay involves only a simple numerical solution to a
 differential equation. However, it is a useful demonstration of basic numerical
 solving techniques, with a wide range of applications.
 Radioactive decay is a stochastic process where a nucleus breaks down, releasing
-energy, matter, or both, depending on the type of decay.
+energy, matter, or both, depending on the type of decay.\cite{decaypage}
 Radioactive decay is a process studied for applications from nuclear weapons to
 carbon dating, where understanding decay rates of isotopes can yield information
 about age of a sample.
 
-[TODO]: Findings of paper here
+Modelling the radioactive decay problem allows us to study it without needing
+to measure a real, physical system of radioactive nuclei. This is both
+easier to set up and measure than a real system, since you don't need any material
+or equipment beyond a computer, and more precise and tunable, since you're
+not limited by the physical properties of whatever radioactive material you
+can source.
 
+One can use similar numerical methods to model a resonant system, where particles
+can tunnel between two states with different lifetimes. Again, modelling the
+system in a computer simulation allows us to study it without constraints
+imposed by available real particles.
+
+I analyze the short and long term behavior of two populations of radioactive
+particles, where one particle decays into the second and the second decays into
+nothing. I find that the first population monatonically exponentially decays,
+while the second population briefly peaks before decaying exponentially.
+I also perform some stability analysis for different timestep lengths, finding
+that timesteps on the order of the nuclei cause numerical instabilities in
+the simulation. Additionally, for the case where the first population has a
+lifetime much longer than the second, an oscillatory instability can appear
+for a certain range of timestep lengths.
+
+Finally, I model the resonant system, and find that both populations go
+from their initial values to equilibrium values, where one population
+is equal to twice the other. Examining the differential equations of the
+populations, I confirm that at these population numbers the time derivatives
+of each population go to 0, indicating equilibrium.
 
 
 \section{Method}
@@ -81,7 +107,8 @@ These equations can be normalized to
   \frac{d \bar N_B}{d \bar t} &= \bar N_A - \frac{\tau_A}{\tau_B} \label{eq:decay_B_norm}\bar N_B
 \end{align}
 
-where bars indicate the normalized variables.
+where bars indicate normalized variables, and will be dropped later for the remainder
+of this paper.
 
 Numerical solutions are obtained by using the Euler method with a fixed time
 interval $dt$. $dt$ will be varied to explore the stability of different length
@@ -91,14 +118,14 @@ and plotting the solutions.
 
 All numerical simulations of this system are performed with
 $N_A (t=0) = 200$ and $N_B (t=0) = 5$. $dt$ for the stable simulations is chosen
-to be $0.1$, but varied between higher values to explore instabilities/
+to be $0.1$, but varied between higher values to explore instabilities.
 
 \subsection{Part II - Resonance}
 
 In Part II a system is analyzed where $B$ nuclei decay back into $A$ nuclei.
 Since each species of nucleus can now decay into the other, this is no longer
 truly a radioactive decay problem. This is more analogous to a resonance or
-tunnelling problem, where particles tunnel between two states with equal energy.
+tunnelling problem, where particles tunnel between two states with equal energy.\cite{assignment}
 This system is described by
 
 \begin{align}
@@ -112,6 +139,8 @@ which are normalized to
   \frac{d \bar N_A}{d \bar t} &= -  \bar N_A + \frac{1}{2} \bar N_B \label{eq:res_A_norm} \\
   \frac{d \bar N_B}{d \bar t} &=  \bar N_A - \frac{1}{2} \bar N_B \label{eq:res_B_norm}.
 \end{align}
+
+where bars again indicate normalized variables, and will henceforth be dropped.
 
 This system is simulated with $dt=0.1$, $N_A(0)=150$, and $N_B(0)=0$.
 
@@ -185,19 +214,19 @@ the $B$ population begins its decay.
   \begin{subfigure}{.7\linewidth}
     \includegraphics[width=\linewidth]{num_tgt1.pdf}
     \caption{$\tau_A / \tau_B=5$}
-    \label{fig:tau_gt_1}
+    \label{fig:exac_tau_gt_1}
   \end{subfigure}
 ~
   \begin{subfigure}{.7\linewidth}
     \includegraphics[width=\linewidth]{num_teq1.pdf}
     \caption{$\tau_A / \tau_B=1$}
-    \label{fig:tau_eq_1}
+    \label{fig:exact_tau_eq_1}
   \end{subfigure}
 ~
   \begin{subfigure}{.7\linewidth}
     \includegraphics[width=\linewidth]{num_tlt1.pdf}
     \caption{$\tau_A / \tau_B=0.2$}
-    \label{fig:tau_lt_1}
+    \label{fig:exact_tau_lt_1}
   \end{subfigure}
 
   \caption{Analytical solutions of $A$ and $B$ nucleus populations for various values of \trel.
@@ -322,7 +351,16 @@ a steady state where $N_B = 2 N_A$. Examining Eqs.~\ref{eq:res_A_norm} and
 derivatives of each population go to 0 when $N_B = 2 N_A$.
 
 \begin{thebibliography}{1}
+\bibitem{assignment}
+M. Shay.
+\textit{Project I Description}.
+(University of Delaware, Spring 2018)
 
+\bibitem{decaypage}
+NDT Resource Center.
+\textit{Radioactive Decay}.
+\url{https://www.nde-ed.org/EducationResources/HighSchool/Radiography/radioactivedecay.htm}
+(Accessed Feb. 24, 2018)
 \end{thebibliography}
 
 \end{document}
