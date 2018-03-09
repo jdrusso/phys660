@@ -1,16 +1,18 @@
 import numpy as np
+from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 END = -1
 COLLISION = 0
 BOUNCE = 1
 
 x1, x2 = 1.0, 1.5
-v1, v2 = -1.0, -1.0
+v1, v2 = 0.0, -1.0
 
-m1, m2 = 1., 2.
+m1, m2 = 1., 1.
 
 tmax = 10
-dt = 0.1
+dt = 1.E-3
 steps = tmax/dt
 
 g = -1
@@ -55,24 +57,31 @@ def next_event(xs, vs, t):
 
     # Find the time of the event
     event_time = (x1-x2) / (v2-v1) if collide else bounce_time1
+    print(event_time)
 
     # Update v and x using kinematics equations
+    #   I.e., find where the balls are at the time of the event
     x1 += v1*event_time + 0.5 * g * event_time**2
     v1 += g*event_time
 
     x2 += v2*event_time + 0.5 * g * event_time**2
     v2 += g*event_time
 
-    v1 *= (-1)
 
     # If it's a collision, also reverse the top velocity
     if collide:
-        v2 *= (-1)
+        _v2 = (2*m1)/(m1+m2)*v1 - (m1-m2)/(m1+m2)*v2
+        _v1 = (m1-m2)/(m1+m2)*v1 - (2*m2)/(m1+m2)*v2
+
+        v1 = _v1
+        v2 = _v2
 
     # If it's a bounce, set x1 to absolute value so it doesn't go through the
     #   floor.
     elif not collide:
+        print("Bounce")
         x1 = abs(x1)
+        v1 *= (-1)
 
     # Update the entries in the list
     xs = np.append(xs, [[x1],[x2]], axis=1)
@@ -89,25 +98,46 @@ while t[-1] <= tmax:
 
     # Come up with the list of events
     x, v, t = next_event(x, v, t)
-    print("Found event")
-    
+print("Found %d events" % len(t))
+
 print(x)
 print(v)
 print(t)
+    
+# Create functions describing trajectories between events
+# Build a list of each trajectory function, and the domain over
+#   which it applies.
+funcs1 = []
+funcs2 = []
+for i in range(1,len(t)):
+    start = t[i-1]
+    end = t[i]
+    # Define the lambda with default arguments which are executed when the lambda is created, not when it's evaluated.
+    #   Grade A jank right here.
+    func1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start: _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
+    #func1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start:  ("x[0] = %f, v[0] = %f, start = %f, end = %f" % (_x, _v,_start, end))
+    func2 = lambda _t, _x=x[1][i-1], _v=v[1][i-1], _start=start: _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
+    funcs1.append([start, end, func1])
+    funcs2.append([start, end, func2])
 
+sample_times = np.arange(0,tmax,dt)
 
-# for i in range(1,steps):
-#     t += dt
-#
-#
-#     # Update velocities and positions
-#
-#     v[0,i] = v[0,i-1] - (g*dt)
-#     v[1,i] = v[1,i-1] - (g*dt)
-#
-#     x[0,i] = x[0,i-1] + dt*((v[0,i] + v[0,i-1])/2)
-#     x[1,i] = x[1,i-1] + dt*((v[1,i] + v[1,i-1])/2)
-#
-#     # Check for a bounce/collision
-#     distance = x[1,i] - x[0,i]
-#     if distance < 0 or abs(distance<)
+# Build list of boolean conditions defining where each
+#   function applies.
+conds = np.zeros([len(funcs1), len(sample_times)])
+for i in range(len(funcs1)):
+    for j in range(len(sample_times)):
+        if sample_times[j] < funcs1[i][1] and sample_times[j] >= funcs1[i][0]:
+            conds[i][j] = True
+
+print(conds[0][0:10])
+print(conds[2][0:10])
+
+data_points1 = np.piecewise(sample_times, conds, map(list, zip(*funcs1))[2])
+data_points2 = np.piecewise(sample_times, conds, map(list, zip(*funcs2))[2])
+#print(data_points)
+
+print(data_points1[0:10])
+
+plt.plot(sample_times, data_points1, sample_times, data_points2)
+plt.show()  
