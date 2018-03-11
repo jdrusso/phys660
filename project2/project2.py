@@ -9,13 +9,16 @@ BOUNCE = 1
 x1, x2 = 1.0, 1.5
 v1, v2 = 0.0, -1.0
 
-m1, m2 = 1., 1.
+m1, m2 = 1., 9.
 
-tmax = 10
+tmax = 200
 dt = 1.E-3
 steps = tmax/dt
 
 g = -1
+
+# Normalize positions and velocities
+
 
 x = np.zeros([2,1])
 v = np.zeros([2,1])
@@ -25,6 +28,7 @@ t = np.zeros([1])
 
 x[0,0], x[1,0] = x1, x2
 v[0,0], v[1,0] = v1, v2
+
 
 Ei = 0.5*(m1/(m1+m2))*v1**2 + 0.5*(m2/(m1+m2))*v2**2 + m1/(m1+m2)*x1 + m2/(m1+m2)*x2
 
@@ -41,7 +45,8 @@ print("Initial energy is %f" % Ei)
 #   4. Using the time, positions, and velocities of the balls at that event,
 #       calculate the time of the next event.
 
-# Find what the next event will be, and in how much time
+# Find what the next event will be for a given set of intial conditions, and in
+#   how much time.
 def next_event(xs, vs, t):
 
     v1, v2 = vs[:,-1]
@@ -57,7 +62,6 @@ def next_event(xs, vs, t):
 
     # Find the time of the event
     event_time = (x1-x2) / (v2-v1) if collide else bounce_time1
-    print(event_time)
 
     # Update v and x using kinematics equations
     #   I.e., find where the balls are at the time of the event
@@ -71,17 +75,19 @@ def next_event(xs, vs, t):
     # If it's a collision, also reverse the top velocity
     if collide:
         _v2 = (2*m1)/(m1+m2)*v1 - (m1-m2)/(m1+m2)*v2
-        _v1 = (m1-m2)/(m1+m2)*v1 - (2*m2)/(m1+m2)*v2
+        _v1 = (m1-m2)/(m1+m2)*v1 + (2*m2)/(m1+m2)*v2
 
         v1 = _v1
         v2 = _v2
 
+        x2 += .0000001
+
     # If it's a bounce, set x1 to absolute value so it doesn't go through the
     #   floor.
     elif not collide:
-        print("Bounce")
         x1 = abs(x1)
         v1 *= (-1)
+
 
     # Update the entries in the list
     xs = np.append(xs, [[x1],[x2]], axis=1)
@@ -98,46 +104,113 @@ while t[-1] <= tmax:
 
     # Come up with the list of events
     x, v, t = next_event(x, v, t)
-print("Found %d events" % len(t))
 
-print(x)
-print(v)
-print(t)
-    
+print("Found %d events" % (len(t)-1))
+
+##################### Poincare section ##################
+# At this point, there's a list of positions, velocities, and times at all the
+#   collisions. This is what's needed for part 3, plotting the Poincare section
+#   of v2 vs x2 at collision times.
+plt.subplot(211)
+plt.plot(v[1], x[1], '.')
+plt.xlabel("v_2")
+plt.ylabel("x_2")
+#########################################################
+
+
+
+
+print("Generating trajectory functions")
 # Create functions describing trajectories between events
 # Build a list of each trajectory function, and the domain over
 #   which it applies.
-funcs1 = []
-funcs2 = []
+traj1s = []
+traj2s = []
+
 for i in range(1,len(t)):
     start = t[i-1]
     end = t[i]
-    # Define the lambda with default arguments which are executed when the lambda is created, not when it's evaluated.
-    #   Grade A jank right here.
-    func1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start: _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
-    #func1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start:  ("x[0] = %f, v[0] = %f, start = %f, end = %f" % (_x, _v,_start, end))
-    func2 = lambda _t, _x=x[1][i-1], _v=v[1][i-1], _start=start: _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
-    funcs1.append([start, end, func1])
-    funcs2.append([start, end, func2])
 
+    # These lambda functions calculate the position and velocity of the ball at
+    #   some time. This is like a piecewise trajectory function, where each
+    #   trajectory is defined within some domain by the initial conditions at
+    #   the start of that.
+    # The alternative to this would be storing the initial conditions over each
+    #   interval and then just calling a trajectory function and passing it those,
+    #   but I started with this because I wanted to use np.piecewise() to evaluate
+    #   all the times.
+    # However, it turned out that doing it that way I had to build a matrix of
+    #   booleans that would define at what time each part of the piecewise
+    #   function is called. That matrix was of dimension
+    #   (number of sampled times * number of events), which rapidly got unmanageably
+    #   large. For example, at t=20,000 that was using more than 16GB of memory.
+    # As some bonus content on how Python handles lambda functions, variables
+    #   in a lambda function are evaluated when the function is called, not when
+    #   it's created. Here, that'll cause issues, since I need the initial conditions
+    #   to be stored in the lambda. I can get around this by passing them as
+    #   default arguments, which are stored when the function is created.
+    # It's a little janky, but it works.
+    # TODO: There's a better way to do this without having these two mirrored
+    #   lines, but whatever.
+
+    # Define position functions
+    traj1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start: \
+        _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
+
+    traj2 = lambda _t, _x=x[1][i-1], _v=v[1][i-1], _start=start: \
+        _x + _v*(_t-_start) + 0.5*g*(_t-_start)**2
+
+    # Define velocity functions
+    vel1 = lambda _t, _v=v[0][i-1], _start=start: \
+        _v + 0.5*g*(_t-_start)
+    vel2 = lambda _t, _v=v[1][i-1], _start=start: \
+        _v + 0.5*g*(_t-_start)
+
+    traj1s.append([start, end, traj1, vel1])
+    traj2s.append([start, end, traj2, vel2])
+
+
+# Sample the trajectories at each of the points
+print("Sampling points")
+x = [[],[]]
+v = [[],[]]
 sample_times = np.arange(0,tmax,dt)
+for time in sample_times:
+    while time > traj1s[0][1]:
+        traj1s.pop(0)
+        traj2s.pop(0)
 
+    x[0].append(traj1s[0][2](time))
+    x[1].append(traj2s[0][2](time))
+
+    v[0].append(traj1s[0][3](time))
+    v[1].append(traj2s[0][3](time))
+
+
+
+
+################### Old piecewise method ######################
+# This evaluates
+
+#print("Generating boolean list")
 # Build list of boolean conditions defining where each
 #   function applies.
-conds = np.zeros([len(funcs1), len(sample_times)])
-for i in range(len(funcs1)):
-    for j in range(len(sample_times)):
-        if sample_times[j] < funcs1[i][1] and sample_times[j] >= funcs1[i][0]:
-            conds[i][j] = True
+# TODO: This is far and away the slowest part of the program. Find a more efficient algorithm.
+#   -> Maybe: Rather than doing all this list indexing
+#conds = np.zeros([len(traj1s), len(sample_times)])
+#for i in range(len(traj1s)):
+#    start = traj1s[i][0]
+#    end = traj1s[i][1]
+#    for j in range(len(sample_times)):
+#        if sample_times[j] >= start and sample_times[j] < end:
+#            conds[i][j] = True
 
-print(conds[0][0:10])
-print(conds[2][0:10])
-
-data_points1 = np.piecewise(sample_times, conds, map(list, zip(*funcs1))[2])
-data_points2 = np.piecewise(sample_times, conds, map(list, zip(*funcs2))[2])
-#print(data_points)
-
-print(data_points1[0:10])
-
-plt.plot(sample_times, data_points1, sample_times, data_points2)
-plt.show()  
+#print("Calculating piecewise")
+#data_points1 = np.piecewise(sample_times, conds, map(list, zip(*traj1s))[2])
+#data_points2 = np.piecewise(sample_times, conds, map(list, zip(*traj2s))[2])
+###############################################################
+plt.subplot(212)
+plt.plot(sample_times, x[0], sample_times, x[1])
+plt.xlabel('t')
+plt.ylabel('x')
+plt.show()
