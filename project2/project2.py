@@ -133,65 +133,61 @@ def sample_points(traj1s, traj2s, sample_times):
         v[1].append(traj2s[0][3](time))
 
     return x, v
+
+def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
+
+    m = m1 + m2
+
+    g = -1
+
+    Ei = m1*x1 + m2*x2 + 0.5*m1*v1**2 + 0.5*m2*v2**2
+
+    ### Normalize positions and velocities
+    x1 /= Ei/m
+    x2 /= Ei/m
+
+    v1 /= np.sqrt(Ei/m)
+    v2 /= np.sqrt(Ei/m)
+
+    E = 0.5*(m1/m)* v1**2 + 0.5*(m2/m)*v2**2 + (m1/m)*x1 + (m2/m)*x2
+    print("Initial energy is %f, normalized to %f" % (Ei, E))
+
+    steps = tmax/dt
+
+    x = np.zeros([2,1])
+    v = np.zeros([2,1])
+    t = np.zeros([1])
+
+    x[0,0], x[1,0] = x1, x2
+    v[0,0], v[1,0] = v1, v2
+
+    # Find all the events, record the times, positions, and velocities at them,
+    #   and then interpolate functions between.
+    while t[-1] <= tmax:
+
+        # Come up with the list of events
+        x, v, t = next_event(x, v, t)
+
+    print("Found %d events" % (len(t)-1))
+
+    return x, v, t
 ###############################################################################
-
-
-
-x1, x2 = 1.0, 3.0
-v1, v2 = 0.0, 0.0
-
-m1, m2 = 1., 1.
-m = m1 + m2
-
-g = -1
-
-Ei = m1*x1 + m2*x2 + 0.5*m1*v1**2 + 0.5*m2*v2**2
-
-### Normalize positions and velocities
-x1 /= Ei/m
-x2 /= Ei/m
-
-v1 /= np.sqrt(Ei/m)
-v2 /= np.sqrt(Ei/m)
-
-E = 0.5*(m1/m)* v1**2 + 0.5*(m2/m)*v2**2 + (m1/m)*x1 + (m2/m)*x2
-print("Initial energy is %f, normalized to %f" % (Ei, E))
 
 
 tmax = 2000
 dt = 1.E-2
-steps = tmax/dt
 
-x = np.zeros([2,1])
-v = np.zeros([2,1])
-t = np.zeros([1])
 
-x[0,0], x[1,0] = x1, x2
-v[0,0], v[1,0] = v1, v2
-
-# Find all the events, record the times, positions, and velocities at them,
-#   and then interpolate functions between.
-while t[-1] <= tmax:
-
-    # Come up with the list of events
-    x, v, t = next_event(x, v, t)
-
-print("Found %d events" % (len(t)-1))
-
+x, v, t = get_data(x1 = 1.0, x2 = 3.0, v1 = 0.0, v2=0.0, m1=1., m2=1.)
 
 ##################### Poincare section ##################
-# At this point, there's a list of positions, velocities, and times at all the
-#   collisions. This is what's needed for part 3, plotting the Poincare section
-#   of v2 vs x2 at collision times.
-print("Generating Poincare sections")
-
-# For the Poincare section, I want to filter out these events to ONLY collisions.
+# x, v, t are currently datapoints at events.
+# For a Poincare section, filter these events to ONLY collisions.
 colls = x[0] == x[1]
 print("Found %d collisions" % len([c for c in colls if c == True]))
 
-
-plt.subplot(311)
 # Plot only the collision elements by indexing the arrays with a Boolean mask
+plt.subplot(311)
 plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
 plt.ylabel("x_2")
