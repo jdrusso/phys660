@@ -134,11 +134,10 @@ def sample_points(traj1s, traj2s, sample_times):
 
     return x, v
 
+
 def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
 
     m = m1 + m2
-
-    g = -1
 
     Ei = m1*x1 + m2*x2 + 0.5*m1*v1**2 + 0.5*m2*v2**2
 
@@ -171,28 +170,47 @@ def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
     print("Found %d events" % (len(t)-1))
 
     return x, v, t
+
+
+def acorr(data, percentLag):
+    num_lags = int(len(data)*percentLag)
+    m = np.mean(data)
+
+    a = np.zeros(num_lags)
+
+    for r in range(num_lags):
+        for i in range(num_lags-r):
+            a[r] += (data[i] - m)*(data[i+r])
+        a[r] /= (num_lags-r)
+
+    return a / max(abs(a))
 ###############################################################################
 
 
-tmax = 2000
-dt = 1.E-2
+tmax = 5000
+dt = 1.E-1
+g = -1
+x1, x2 = 1.0, 1.1
+v1, v2 = 0.0, 0.0
+m1, m2 = 1.0, 9.0
 
+x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
 
-x, v, t = get_data(x1 = 1.0, x2 = 3.0, v1 = 0.0, v2=0.0, m1=1., m2=1.)
-
-##################### Poincare section ##################
+###### Poincare section ########
 # x, v, t are currently datapoints at events.
 # For a Poincare section, filter these events to ONLY collisions.
 colls = x[0] == x[1]
 print("Found %d collisions" % len([c for c in colls if c == True]))
 
 # Plot only the collision elements by indexing the arrays with a Boolean mask
-plt.subplot(311)
+plt.subplot(411)
 plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
 plt.ylabel("x_2")
-#########################################################
+################################
 
+
+print("Plotting trajectories")
 # Get evenly-spaced trajectories
 t1s, t2s = trajectories(x, v, t)
 sample_times = np.arange(0,tmax,dt)
@@ -200,18 +218,39 @@ x, v = sample_points(t1s, t2s, sample_times)
 
 
 # Plot trajectories
-print("Plotting trajectories")
-plt.subplot(312)
+plt.subplot(412)
 plt.plot(sample_times, x[0], sample_times, x[1])
 plt.xlabel('t')
 plt.ylabel('x')
 
 
-# Calculate and plot autocorrelation
+
 print("Plotting correlation")
-plt.subplot(313)
+# Calculate and plot autocorrelation
+plt.subplot(413)
 # plt.acorr(x[0][::10], usevlines=False, normed=True, maxlags=100, linestyle='-')
-correlated = np.correlate(x[0][::100], x[0][::100], mode=2)
-correlated = correlated[(correlated.size-1)//2 :]
-plt.plot(correlated / max(correlated), 'r-')
+
+# correlated = correlated[(correlated.size-1)//2 :]
+# correlated = np.correlate(x[0][::10], x[0][::10], mode='full')
+correlated = acorr(x[0], .1)
+plt.plot(correlated, 'b-')
+plt.ylim([-1,1])
+
+
+
+print("Calculating Lyapunov exponent")
+xp, vp, tp = get_data(x1=x1, x2=x2+1E-6, v1=v1, v2=v2, m1=m1, m2=m2)
+t1s, t2s = trajectories(xp, vp, tp)
+xp, vp = sample_points(t1s, t2s, sample_times)
+
+plt.subplot(412)
+plt.plot(sample_times, xp[0], sample_times, xp[1])
+
+diff = np.array(xp) - np.array(x)
+plt.subplot(414)
+plt.plot(sample_times, diff[1])
+plt.gca().set_yscale('log')
+
+
+
 plt.show()
