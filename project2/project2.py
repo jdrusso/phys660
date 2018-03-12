@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -6,16 +7,32 @@ END = -1
 COLLISION = 0
 BOUNCE = 1
 
-x1, x2 = 1.0, 1.5
-v1, v2 = 0.0, -1.0
+x1, x2 = 1.0, 3.0
+v1, v2 = 0.0, 0.0
 
-m1, m2 = 1., 9.
-
-tmax = 200
-dt = 1.E-3
-steps = tmax/dt
+m1, m2 = 1., 1.
+m = m1 + m2
 
 g = -1
+
+Ei = m1*x1 + m2*x2 + 0.5*m1*v1**2 + 0.5*m2*v2**2
+
+### Normalize Xs and Vs
+x1 /= Ei/m
+x2 /= Ei/m
+
+v1 /= np.sqrt(Ei/m)
+v2 /= np.sqrt(Ei/m)
+
+
+E = 0.5*(m1/m)* v1**2 + 0.5*(m2/m)*v2**2 + (m1/m)*x1 + (m2/m)*x2
+print("Initial energy is %f, normalized to %f" % (Ei, E))
+
+
+tmax = 2000
+dt = 1.E-2
+steps = tmax/dt
+
 
 # Normalize positions and velocities
 
@@ -23,19 +40,9 @@ g = -1
 x = np.zeros([2,1])
 v = np.zeros([2,1])
 t = np.zeros([1])
-# Want to add new values with np.append(x, [[x1],[x2]], axis=1)
-
 
 x[0,0], x[1,0] = x1, x2
 v[0,0], v[1,0] = v1, v2
-
-
-Ei = 0.5*(m1/(m1+m2))*v1**2 + 0.5*(m2/(m1+m2))*v2**2 + m1/(m1+m2)*x1 + m2/(m1+m2)*x2
-
-eps = 2.2204E-16
-
-print("Initial energy is %f" % Ei)
-
 
 
 # General algorithm:
@@ -80,7 +87,7 @@ def next_event(xs, vs, t):
         v1 = _v1
         v2 = _v2
 
-        x2 += .0000001
+        #x2 += .0000001
 
     # If it's a bounce, set x1 to absolute value so it doesn't go through the
     #   floor.
@@ -107,12 +114,22 @@ while t[-1] <= tmax:
 
 print("Found %d events" % (len(t)-1))
 
+
 ##################### Poincare section ##################
 # At this point, there's a list of positions, velocities, and times at all the
 #   collisions. This is what's needed for part 3, plotting the Poincare section
 #   of v2 vs x2 at collision times.
-plt.subplot(211)
-plt.plot(v[1], x[1], '.')
+
+print("Generating Poincare sections")
+
+# For the Poincare section, I want to filter out these events to ONLY collisions.
+colls = x[0] == x[1]
+print("Found %d collisions" % len([c for c in colls if c == True]))
+
+
+plt.subplot(311)
+# Plot only the collision elements by indexing the arrays with a Boolean mask
+plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
 plt.ylabel("x_2")
 #########################################################
@@ -188,7 +205,7 @@ for time in sample_times:
 
 
 
-
+print("Plotting trajectories")
 ################### Old piecewise method ######################
 # This evaluates
 
@@ -209,8 +226,18 @@ for time in sample_times:
 #data_points1 = np.piecewise(sample_times, conds, map(list, zip(*traj1s))[2])
 #data_points2 = np.piecewise(sample_times, conds, map(list, zip(*traj2s))[2])
 ###############################################################
-plt.subplot(212)
+plt.subplot(312)
 plt.plot(sample_times, x[0], sample_times, x[1])
 plt.xlabel('t')
 plt.ylabel('x')
+
+
+################## Autocorrelation #########################
+
+print("Plotting correlation")
+plt.subplot(313)
+# plt.acorr(x[0][::10], usevlines=False, normed=True, maxlags=100, linestyle='-')
+correlated = np.correlate(x[0][::100], x[0][::100], mode=2)
+correlated = correlated[(correlated.size-1)//2 :]
+plt.plot(correlated / max(correlated), 'r-')
 plt.show()
