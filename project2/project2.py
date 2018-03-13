@@ -175,24 +175,25 @@ def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
 def acorr(data, percentLag):
     num_lags = int(len(data)*percentLag)
     m = np.mean(data)
+    dev = data - m
 
     a = np.zeros(num_lags)
 
+    # print("Len is %d" % len(data[:(0-m)]))
+
     for r in range(num_lags):
-        for i in range(num_lags-r):
-            a[r] += (data[i] - m)*(data[i+r])
-        a[r] /= (num_lags-r)
+        a[r] = sum(np.multiply(dev[0:(-1-r)],dev[1+r:]))
 
     return a / max(abs(a))
 ###############################################################################
 
 
-tmax = 5000
+tmax = 500
 dt = 1.E-1
 g = -1
-x1, x2 = 1.0, 1.1
+x1, x2 = 1.0, 3
 v1, v2 = 0.0, 0.0
-m1, m2 = 1.0, 9.0
+m1, m2 = 1.0, .5
 
 x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
 
@@ -204,6 +205,7 @@ print("Found %d collisions" % len([c for c in colls if c == True]))
 
 # Plot only the collision elements by indexing the arrays with a Boolean mask
 plt.subplot(411)
+plt.title("Poincare Section")
 plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
 plt.ylabel("x_2")
@@ -219,6 +221,7 @@ x, v = sample_points(t1s, t2s, sample_times)
 
 # Plot trajectories
 plt.subplot(412)
+plt.title("Trajectories")
 plt.plot(sample_times, x[0], sample_times, x[1])
 plt.xlabel('t')
 plt.ylabel('x')
@@ -228,11 +231,13 @@ plt.ylabel('x')
 print("Plotting correlation")
 # Calculate and plot autocorrelation
 plt.subplot(413)
+plt.title("Autocorrelation")
 # plt.acorr(x[0][::10], usevlines=False, normed=True, maxlags=100, linestyle='-')
 
-# correlated = correlated[(correlated.size-1)//2 :]
 # correlated = np.correlate(x[0][::10], x[0][::10], mode='full')
-correlated = acorr(x[0], .1)
+# correlated = correlated[(correlated.size-1)//2 :]
+
+correlated = acorr(x[1], .05)
 plt.plot(correlated, 'b-')
 plt.ylim([-1,1])
 
@@ -244,13 +249,15 @@ t1s, t2s = trajectories(xp, vp, tp)
 xp, vp = sample_points(t1s, t2s, sample_times)
 
 plt.subplot(412)
+plt.title("Trajectories")
 plt.plot(sample_times, xp[0], sample_times, xp[1])
 
 diff = np.array(xp) - np.array(x)
 plt.subplot(414)
+plt.title("Lyapunov Exponent")
 plt.plot(sample_times, diff[1])
 plt.gca().set_yscale('log')
 
 
-
+plt.tight_layout(h_pad=0.1)
 plt.show()
