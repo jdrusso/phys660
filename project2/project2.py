@@ -1,6 +1,9 @@
 #!/usr/bin/python
 import numpy as np
 import matplotlib.pyplot as plt
+# import matplotlib as mpl
+from matplotlib import rc
+from matplotlib.ticker import MaxNLocator
 
 
 ################################################################################
@@ -187,14 +190,23 @@ def acorr(data, percentLag):
 ###############################################################################
 
 
-tmax = 500
+tmax = 100
 dt = 1.E-1
 g = -1
 x1, x2 = 1.0, 3.0
 v1, v2 = 0.0, 0.0
-m1, m2 = 1.0, 9.0
+m1, m2 = 1.0, 0.5
+
+# mpl.rcParams['axes.labelsize'] = 'large'
+rc('axes', labelsize=20)
+rc('axes', titlesize=20)
+rc('xtick', labelsize=18)
+rc('ytick', labelsize=18)
+rc('lines', linewidth=3)
+rc('lines', markersize=10)
 
 x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
+
 
 ###### Poincare section ########
 # x, v, t are currently datapoints at events.
@@ -203,12 +215,28 @@ colls = x[0] == x[1]
 print("Found %d collisions" % len([c for c in colls if c == True]))
 
 # Plot only the collision elements by indexing the arrays with a Boolean mask
-plt.subplot(311)
-plt.title("Poincare Section")
+plt.figure(100)
+# plt.title("Poincare Section")
 plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
 plt.ylabel("x_2")
-################################
+
+
+# ## Plot multiple Poincare sections ###
+# x2s = np.linspace(2,8,12)
+# for x2 in x2s:
+#     x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
+#     colls = x[0] == x[1]
+#     print("Found %d collisions" % len([c for c in colls if c == True]))
+#
+#     # Plot only the collision elements by indexing the arrays with a Boolean mask
+#     plt.plot(v[1, colls], x[1, colls], '.')
+# plt.xlabel("v_2")
+# plt.ylabel("x_2")
+# plt.show()
+# ######################################
+
+
 
 
 print("Plotting trajectories")
@@ -219,8 +247,8 @@ x, v = sample_points(t1s, t2s, sample_times)
 
 
 # Plot trajectories
-plt.subplot(312)
-plt.title("Trajectories")
+plt.figure(200)
+# plt.title("Trajectories")
 plt.plot(sample_times, x[0], label="x1")
 plt.plot(sample_times, x[1], label="x2")
 plt.legend()
@@ -231,17 +259,15 @@ plt.ylabel('x')
 
 print("Plotting correlation")
 # Calculate and plot autocorrelation
-plt.subplot(313)
-plt.title("Autocorrelation")
-# plt.acorr(x[0][::10], usevlines=False, normed=True, maxlags=100, linestyle='-')
-
-# correlated = np.correlate(x[0][::10], x[0][::10], mode='full')
-# correlated = correlated[(correlated.size-1)//2 :]
+# plt.subplot(313)
+plt.figure(300)
+# plt.title("Autocorrelation")
 
 correlated = acorr(x[1], .10)
 plt.plot(correlated, 'b-')
 plt.ylim([-1,1])
-
+plt.xlabel('Lag')
+plt.ylabel('Autocorrelation')
 
 
 #print("Calculating Lyapunov exponent")
@@ -260,5 +286,10 @@ plt.ylim([-1,1])
 #plt.gca().set_yscale('log')
 
 
-plt.tight_layout(h_pad=0.1)
-plt.show()
+# plt.tight_layout(h_pad=0.1)
+for i in plt.get_fignums():
+    plt.figure(i)
+    plt.gca().xaxis.set_major_locator(MaxNLocator(4))
+    plt.gca().yaxis.set_major_locator(MaxNLocator(4))
+
+plt.show(block=True)
