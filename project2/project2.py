@@ -150,6 +150,7 @@ def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
 
     E = 0.5*(m1/m)* v1**2 + 0.5*(m2/m)*v2**2 + (m1/m)*x1 + (m2/m)*x2
     print("Initial energy is %f, normalized to %f" % (Ei, E))
+    print("x1=%f, x2=%f, v1=%f, v2=%f" % (x1, x2, v1, v2))
 
     steps = tmax/dt
 
@@ -179,8 +180,6 @@ def acorr(data, percentLag):
 
     a = np.zeros(num_lags)
 
-    # print("Len is %d" % len(data[:(0-m)]))
-
     for r in range(num_lags):
         a[r] = sum(np.multiply(dev[0:(-1-r)],dev[1+r:]))
 
@@ -191,9 +190,9 @@ def acorr(data, percentLag):
 tmax = 500
 dt = 1.E-1
 g = -1
-x1, x2 = 1.0, 3
+x1, x2 = 1.0, 3.0
 v1, v2 = 0.0, 0.0
-m1, m2 = 1.0, .5
+m1, m2 = 1.0, 9.0
 
 x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
 
@@ -204,7 +203,7 @@ colls = x[0] == x[1]
 print("Found %d collisions" % len([c for c in colls if c == True]))
 
 # Plot only the collision elements by indexing the arrays with a Boolean mask
-plt.subplot(411)
+plt.subplot(311)
 plt.title("Poincare Section")
 plt.plot(v[1, colls], x[1, colls], '.')
 plt.xlabel("v_2")
@@ -220,9 +219,11 @@ x, v = sample_points(t1s, t2s, sample_times)
 
 
 # Plot trajectories
-plt.subplot(412)
+plt.subplot(312)
 plt.title("Trajectories")
-plt.plot(sample_times, x[0], sample_times, x[1])
+plt.plot(sample_times, x[0], label="x1")
+plt.plot(sample_times, x[1], label="x2")
+plt.legend()
 plt.xlabel('t')
 plt.ylabel('x')
 
@@ -230,33 +231,33 @@ plt.ylabel('x')
 
 print("Plotting correlation")
 # Calculate and plot autocorrelation
-plt.subplot(413)
+plt.subplot(313)
 plt.title("Autocorrelation")
 # plt.acorr(x[0][::10], usevlines=False, normed=True, maxlags=100, linestyle='-')
 
 # correlated = np.correlate(x[0][::10], x[0][::10], mode='full')
 # correlated = correlated[(correlated.size-1)//2 :]
 
-correlated = acorr(x[1], .05)
+correlated = acorr(x[1], .10)
 plt.plot(correlated, 'b-')
 plt.ylim([-1,1])
 
 
 
-print("Calculating Lyapunov exponent")
-xp, vp, tp = get_data(x1=x1, x2=x2+1E-6, v1=v1, v2=v2, m1=m1, m2=m2)
-t1s, t2s = trajectories(xp, vp, tp)
-xp, vp = sample_points(t1s, t2s, sample_times)
+#print("Calculating Lyapunov exponent")
+#xp, vp, tp = get_data(x1=x1, x2=x2+1E-6, v1=v1, v2=v2, m1=m1, m2=m2)
+#t1s, t2s = trajectories(xp, vp, tp)
+#xp, vp = sample_points(t1s, t2s, sample_times)
 
-plt.subplot(412)
-plt.title("Trajectories")
-plt.plot(sample_times, xp[0], sample_times, xp[1])
+#plt.subplot(412)
+#plt.title("Trajectories")
+#plt.plot(sample_times, xp[0], sample_times, xp[1])
 
-diff = np.array(xp) - np.array(x)
-plt.subplot(414)
-plt.title("Lyapunov Exponent")
-plt.plot(sample_times, diff[1])
-plt.gca().set_yscale('log')
+#diff = np.array(xp) - np.array(x)
+#plt.subplot(414)
+#plt.title("Lyapunov Exponent")
+#plt.plot(sample_times, diff[1])
+#plt.gca().set_yscale('log')
 
 
 plt.tight_layout(h_pad=0.1)
