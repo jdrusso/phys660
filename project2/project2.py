@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 # import matplotlib as mpl
 from matplotlib import rc
 from matplotlib.ticker import MaxNLocator
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 ################################################################################
@@ -198,10 +199,10 @@ v1, v2 = 0.0, 0.0
 m1, m2 = 1.0, 0.5
 
 # mpl.rcParams['axes.labelsize'] = 'large'
-rc('axes', labelsize=20)
-rc('axes', titlesize=20)
-rc('xtick', labelsize=18)
-rc('ytick', labelsize=18)
+rc('axes', labelsize=48, labelweight='bold')
+# rc('axes', titlesize=24)
+rc('xtick', labelsize=32)
+rc('ytick', labelsize=32)
 rc('lines', linewidth=3)
 rc('lines', markersize=10)
 
@@ -249,12 +250,11 @@ x, v = sample_points(t1s, t2s, sample_times)
 # Plot trajectories
 plt.figure(200)
 # plt.title("Trajectories")
-plt.plot(sample_times, x[0], label="x1")
-plt.plot(sample_times, x[1], label="x2")
+plt.plot(sample_times, x[0], label="Ball 1")
+plt.plot(sample_times, x[1], label="Ball 2")
 plt.legend()
 plt.xlabel('t')
 plt.ylabel('x')
-
 
 
 print("Plotting correlation")
@@ -287,9 +287,16 @@ plt.ylabel('Autocorrelation')
 
 
 # plt.tight_layout(h_pad=0.1)
+types = ["poincare", "traj", "acorr", "lyapunov"]
 for i in plt.get_fignums():
     plt.figure(i)
     plt.gca().xaxis.set_major_locator(MaxNLocator(4))
     plt.gca().yaxis.set_major_locator(MaxNLocator(4))
 
-plt.show(block=True)
+    t = types[i/100]
+    filename = 'images/r%.1f_%s' % (m1/m2, t)
+    image = PdfPages(filename.replace('.','_') + '.pdf')
+    image.savefig()
+    image.close()
+
+# plt.show(block=True)
