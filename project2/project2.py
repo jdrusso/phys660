@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 # import matplotlib as mpl
 from matplotlib import rc
+from matplotlib import rcParams
 from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -191,27 +192,25 @@ def acorr(data, percentLag):
 ###############################################################################
 
 
-tmax = 100
+tmax = 1500
 dt = 1.E-1
 g = -1
 x1, x2 = 1.0, 3.0
-v1, v2 = 0.0, 0.0
-m1, m2 = 1.0, 0.5
+v1, v2 = 1.5, 0.0
+m1, m2 = 1.0, 9.0
 
-# mpl.rcParams['axes.labelsize'] = 'large'
-rc('axes', labelsize=48, labelweight='bold')
-# rc('axes', titlesize=24)
-rc('xtick', labelsize=32)
-rc('ytick', labelsize=32)
-rc('lines', linewidth=3)
-rc('lines', markersize=10)
+rc('axes', labelsize=40)
+rc(('xtick', 'ytick'), labelsize=32)
+rc(('xtick.major','ytick.major'), size=13, width=4)
+rc('legend', fontsize=30)
+rc('lines', linewidth=3, markersize=10)
 
 x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
 
 
-###### Poincare section ########
-# x, v, t are currently datapoints at events.
-# For a Poincare section, filter these events to ONLY collisions.
+##### Single Poincare section ########
+x, v, t are currently datapoints at events.
+For a Poincare section, filter these events to ONLY collisions.
 colls = x[0] == x[1]
 print("Found %d collisions" % len([c for c in colls if c == True]))
 
@@ -219,22 +218,26 @@ print("Found %d collisions" % len([c for c in colls if c == True]))
 plt.figure(100)
 # plt.title("Poincare Section")
 plt.plot(v[1, colls], x[1, colls], '.')
-plt.xlabel("v_2")
-plt.ylabel("x_2")
+plt.xlabel("v")
+plt.ylabel("x")
+######################################
+
 
 
 # ## Plot multiple Poincare sections ###
-# x2s = np.linspace(2,8,12)
+# plt.figure(num=100)
+# x2s = np.linspace(1.01,8,12)
+# # Color scheme selected both for readability, and in honor of plasma physics
+# plt.gca().set_color_cycle([plt.cm.plasma(i) for i in np.linspace(0, 1, 12)])
 # for x2 in x2s:
 #     x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
 #     colls = x[0] == x[1]
 #     print("Found %d collisions" % len([c for c in colls if c == True]))
 #
 #     # Plot only the collision elements by indexing the arrays with a Boolean mask
-#     plt.plot(v[1, colls], x[1, colls], '.')
-# plt.xlabel("v_2")
-# plt.ylabel("x_2")
-# plt.show()
+#     plt.plot(v[1, colls], x[1, colls], '.', label=('%.1f' % x2))
+# plt.xlabel("v")
+# plt.ylabel("x")
 # ######################################
 
 
@@ -250,9 +253,10 @@ x, v = sample_points(t1s, t2s, sample_times)
 # Plot trajectories
 plt.figure(200)
 # plt.title("Trajectories")
-plt.plot(sample_times, x[0], label="Ball 1")
-plt.plot(sample_times, x[1], label="Ball 2")
-plt.legend()
+plt.plot(sample_times, x[0], 'r-', label="Ball 1")
+plt.plot(sample_times, x[1], 'b-', label="Ball 2", dashes=(15,3))
+# plt.legend(loc='upper center', bbox_to_anchor=(0.63, .8), ncol=2, \
+#     frameon=True, columnspacing=0.5, handletextpad=0.01, borderpad=0.1)
 plt.xlabel('t')
 plt.ylabel('x')
 
@@ -286,17 +290,25 @@ plt.ylabel('Autocorrelation')
 #plt.gca().set_yscale('log')
 
 
-# plt.tight_layout(h_pad=0.1)
-types = ["poincare", "traj", "acorr", "lyapunov"]
+# Save all output figures
+types = ['',"poincare", "traj", "acorr", "lyapunov"]
 for i in plt.get_fignums():
     plt.figure(i)
+    plt.tight_layout()
+    plt.gca().tick_params(top='off', right='off', which='both')
     plt.gca().xaxis.set_major_locator(MaxNLocator(4))
     plt.gca().yaxis.set_major_locator(MaxNLocator(4))
 
+    if types[i/100] == "poincare":
+        continue
+
     t = types[i/100]
-    filename = 'images/r%.1f_%s' % (m1/m2, t)
-    image = PdfPages(filename.replace('.','_') + '.pdf')
+    # filename = ('images/nonchaotic_r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
+    filename = ('images/r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
+
+    image = PdfPages(filename)
     image.savefig()
     image.close()
+    print("Saving image %d as %s" % (i, filename))
 
 # plt.show(block=True)
