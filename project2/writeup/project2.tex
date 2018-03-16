@@ -23,6 +23,7 @@ of Delaware, Newark, DE 19716-2570, USA}
 %TODO: Describe problem studied
 %TODO: Describe how it was studied
 %TODO: Describe major findings, conclusions
+SWEET ABSTRACT GOES HERE
 \end{abstract}
 
 \pacs{45.40.Aa} %Translational kinematics
@@ -31,16 +32,13 @@ of Delaware, Newark, DE 19716-2570, USA}
 \maketitle
 
 \section{Introduction} \label{sec:intro}
-%TODO: Short background
-%TODO: Motivation
-%TODO: Dynamical equations
 
 Classical systems that obey certain criteria can exhibit chaotic behavior, where
 slight changes in initial conditions produce exponential divergence in behavior.
 In other words, chaotic systems exhibit extreme sensitivity in initial
 conditions. \cite{taylor}
 
-In order to be chaotic, a system must exhibit\cite{taylor}:
+In order to be chaotic, a system must exhibit:
 \begin{enumerate}
   \item nonlinearity, \label{nonlinearity}
   \item dependence on more than three variables, and \label{dependence}
@@ -51,12 +49,19 @@ These conditions are necessary, but not sufficient to produce chaotic behavior.
 A system can be chaotic for certain initial conditions but not others, as shown
 in Section~\ref{sec:r9} below.
 
-%TODO: Figure of two balls setup
 In this paper, behavior of a one-dimensional system of colliding balls is studied.
 The balls are modelled as points which can elastically collide with each other
 and with the floor. Dynamical equations of motion governing both the trajectories
 of the balls and collisions between them are discussed
 in Section~\ref{sec:methods}.
+
+\begin{figure}[h]
+  \includegraphics[width=.7\linewidth]{balls}
+  \caption{Diagram of the one-dimensional system of balls simulated in this
+  paper. The element at the bottom represents the floor upon which the bottom
+  ball bounces.}
+  \label{fig:balls}
+\end{figure}
 
 By varying parameters of the system such as the relative masses of the balls and
 the initial positions and velocities of the balls, a wide range of dynamical
@@ -67,8 +72,6 @@ parameters it of particular interest for modelling and analysis to further
 understand chaos.
 
 
-
-% TODO: Describe normalization, equations of motions
 
 \section{Methods} \label{sec:methods}
 
@@ -106,14 +109,15 @@ x'(t) = x'_0 + v'_0 t' - \frac{1}{2} t'^2.
 Bounces and collisions are both characterized by elastic collisions in which
 the total energy is conserved.
 
-\subsubsection{Algorithm}
+\subsubsection{Trajectory analysis algorithm}
 
-% TODO: Describe algorithm - include time to bounce and time to collide parameters
 The algorithm used to numerically evaluate the system follows a two-fold approach
 to exactly solve for the positions of the balls at any time.
 
-First, the positions, velocities, and times of each event (collision or bounce) are
-computed sequentially. Beginning with the initial conditions, the times for each
+First, the positions, velocities, and times of each event are
+computed sequentially, where event refers to either a collision between the two
+balls or ball 1 bouncing off the ground.
+Beginning with the initial conditions, the times for each
 ball to reach the ground are computed. If the second ball would reach the ground
 before the first, then a collision must occur before the first ball reaches the
 ground. The time of this collision is determined by setting the equations of
@@ -142,7 +146,6 @@ In this way, the phase space coordinates and times of each event are calculated.
 This is sufficient to plot Poincare sections, shown for ball 2 in
 Section~\ref{sec:results}.
 
-
 The second stage of the algorithm involves calculating the trajectories of each
 ball. This is necessary both for plotting the spatial trajectories, and for
 calculating autocorrelations.
@@ -166,6 +169,29 @@ interval it falls in to evaluate the positions and velocities of the balls.
 
 Further details on optimizations done to this algorithm are available
 in Appendix~\ref{appendix:traj}.
+
+
+\subsubsection{Autocorrelation}
+
+Autocorrelations $a(\tau)$ were calculated for lag $\tau$ according to
+\begin{equation}
+  a(\tau) = \frac{1}{N-\tau} \sum_{i=1}^{N-\tau}
+  \left(f_i - \bar f \right)
+  \left(f_{i+\tau} - \bar f \right)
+  \label{eq:acorr}
+\end{equation}
+where $N$ indicates the total number of datapoints, $f_i$ is the set of discrete
+positions, and $\bar f$ is the mean of $f$.
+
+Since the implementation of this provided acceptable runtimes even over datasets
+on the order of hundreds of thousands of elements, no subsampling was performed.
+
+
+%TODO: Include a section on how Lyapunov exponents were calculated.
+% \subsubsection{Lyapunov Exponent}
+%
+% Lyapunov exponents
+
 
 
 % TODO: Give numerical parameters like timestep, total time. Explain why Poincare
