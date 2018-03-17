@@ -100,8 +100,6 @@ def trajectories(x, v, t):
         #   to be stored in the lambda. I can get around this by passing them as
         #   default arguments, which are stored when the function is created.
         # It's a little janky, but it works.
-        # TODO: There's a better way to do this without having these two mirrored
-        #   lines, but whatever.
 
         # Define position functions
         traj1 = lambda _t, _x=x[0][i-1], _v=v[0][i-1], _start=start: \
@@ -140,7 +138,7 @@ def sample_points(traj1s, traj2s, sample_times):
     return x, v
 
 
-def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
+def get_data(x1, x2, v1, v2, m1, m2, tmax, dt):
 
     m = m1 + m2
 
@@ -154,10 +152,19 @@ def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
     v2 /= np.sqrt(Ei/m)
 
     E = 0.5*(m1/m)* v1**2 + 0.5*(m2/m)*v2**2 + (m1/m)*x1 + (m2/m)*x2
+
     print("Initial energy is %f, normalized to %f" % (Ei, E))
     print("x1=%f, x2=%f, v1=%f, v2=%f" % (x1, x2, v1, v2))
 
+
+    # Normalize time
+    tmax /= np.sqrt(Ei/(m))
+    dt /= np.sqrt(Ei/(m))
+
     steps = tmax/dt
+
+
+    print("Time is %f" % tmax)
 
     x = np.zeros([2,1])
     v = np.zeros([2,1])
@@ -175,7 +182,7 @@ def get_data(x1, x2, v1, v2, m1, m2, _tmax = 2000, _dt = 1.E-2):
 
     print("Found %d events" % (len(t)-1))
 
-    return x, v, t
+    return x, v, t, tmax, dt
 
 
 def acorr(data, percentLag):
@@ -192,10 +199,10 @@ def acorr(data, percentLag):
 ###############################################################################
 
 
-tmax = 1500
-dt = 1.E-1
-g = -1
-x1, x2 = 1.0, 3.0
+tmax = 5000
+dt = 1.E-2
+g = -1.0
+x1, x2 = 1.0, 1.01
 v1, v2 = 1.5, 0.0
 m1, m2 = 1.0, 9.0
 
@@ -204,23 +211,24 @@ rc(('xtick', 'ytick'), labelsize=32)
 rc(('xtick.major','ytick.major'), size=13, width=4)
 rc('legend', fontsize=30)
 rc('lines', linewidth=3, markersize=10)
+rc('font', family='STIXGeneral')
 
-x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
+x, v, t, _tmax, _dt = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2, tmax=tmax, dt=dt)
 
 
-##### Single Poincare section ########
-x, v, t are currently datapoints at events.
-For a Poincare section, filter these events to ONLY collisions.
-colls = x[0] == x[1]
-print("Found %d collisions" % len([c for c in colls if c == True]))
-
-# Plot only the collision elements by indexing the arrays with a Boolean mask
-plt.figure(100)
-# plt.title("Poincare Section")
-plt.plot(v[1, colls], x[1, colls], '.')
-plt.xlabel("v")
-plt.ylabel("x")
-######################################
+# ##### Single Poincare section ########
+# #x, v, t are currently datapoints at events.
+# #For a Poincare section, filter these events to ONLY collisions.
+# colls = x[0] == x[1]
+# print("Found %d collisions" % len([c for c in colls if c == True]))
+#
+# # Plot only the collision elements by indexing the arrays with a Boolean mask
+# plt.figure(100)
+# # plt.title("Poincare Section")
+# plt.plot(v[1, colls], x[1, colls], '.')
+# plt.xlabel("$v$")
+# plt.ylabel("$x$")
+# ######################################
 
 
 
@@ -230,14 +238,14 @@ plt.ylabel("x")
 # # Color scheme selected both for readability, and in honor of plasma physics
 # plt.gca().set_color_cycle([plt.cm.plasma(i) for i in np.linspace(0, 1, 12)])
 # for x2 in x2s:
-#     x, v, t = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2)
+#     x, v, t, _, _ = get_data(x1=x1, x2=x2, v1=v1, v2=v2, m1=m1, m2=m2, tmax=tmax, dt=dt)
 #     colls = x[0] == x[1]
 #     print("Found %d collisions" % len([c for c in colls if c == True]))
 #
 #     # Plot only the collision elements by indexing the arrays with a Boolean mask
 #     plt.plot(v[1, colls], x[1, colls], '.', label=('%.1f' % x2))
-# plt.xlabel("v")
-# plt.ylabel("x")
+# plt.xlabel("$v$")
+# plt.ylabel("$x$")
 # ######################################
 
 
@@ -246,65 +254,76 @@ plt.ylabel("x")
 print("Plotting trajectories")
 # Get evenly-spaced trajectories
 t1s, t2s = trajectories(x, v, t)
-sample_times = np.arange(0,tmax,dt)
+sample_times = np.arange(0, _tmax, _dt)
 x, v = sample_points(t1s, t2s, sample_times)
 
-
-# Plot trajectories
-plt.figure(200)
-# plt.title("Trajectories")
-plt.plot(sample_times, x[0], 'r-', label="Ball 1")
-plt.plot(sample_times, x[1], 'b-', label="Ball 2", dashes=(15,3))
-# plt.legend(loc='upper center', bbox_to_anchor=(0.63, .8), ncol=2, \
-#     frameon=True, columnspacing=0.5, handletextpad=0.01, borderpad=0.1)
-plt.xlabel('t')
-plt.ylabel('x')
-
-
-print("Plotting correlation")
-# Calculate and plot autocorrelation
-# plt.subplot(313)
-plt.figure(300)
-# plt.title("Autocorrelation")
-
-correlated = acorr(x[1], .10)
-plt.plot(correlated, 'b-')
-plt.ylim([-1,1])
-plt.xlabel('Lag')
-plt.ylabel('Autocorrelation')
+# # Plot trajectories
+# plt.figure(200)
+# plt.plot(sample_times, x[0], 'r-', label="Ball 1")
+# plt.plot(sample_times, x[1], 'b-', label="Ball 2", dashes=(15,3))
+# plt.xlim([0,20])
+# # plt.legend(loc='upper center', bbox_to_anchor=(0.63, .8), ncol=2, \
+# #     frameon=True, columnspacing=0.5, handletextpad=0.01, borderpad=0.1)
+# plt.xlabel('$t$')
+# plt.ylabel('$x$')
 
 
-#print("Calculating Lyapunov exponent")
-#xp, vp, tp = get_data(x1=x1, x2=x2+1E-6, v1=v1, v2=v2, m1=m1, m2=m2)
-#t1s, t2s = trajectories(xp, vp, tp)
-#xp, vp = sample_points(t1s, t2s, sample_times)
 
-#plt.subplot(412)
-#plt.title("Trajectories")
-#plt.plot(sample_times, xp[0], sample_times, xp[1])
+# # print("Plotting correlation")
+# # Calculate and plot autocorrelation
+# plt.figure(300)
+#
+# correlated = acorr(x[1], .10)
+#
+# plt.plot(sample_times[::10], correlated, 'b-')
+# plt.ylim([-1,1])
+# plt.xlabel('$t$')
+# plt.ylabel('$\mathrm{Autocorrelation}$')
+#
+#
+#
+print("Calculating Lyapunov exponent")
+plt.figure(400)
+xp, vp, tp, _tmax, _dt = get_data(x1=x1, x2=x2+1E-6, v1=v1, v2=v2, m1=m1, m2=m2, tmax=tmax, dt=dt)
+t1s, t2s = trajectories(xp, vp, tp)
+xp, vp = sample_points(t1s, t2s, sample_times)
 
-#diff = np.array(xp) - np.array(x)
-#plt.subplot(414)
-#plt.title("Lyapunov Exponent")
-#plt.plot(sample_times, diff[1])
-#plt.gca().set_yscale('log')
+diff = np.abs(np.array(xp) - np.array(x))
+plt.plot(sample_times, diff[1])
+plt.gca().set_yscale('log')
+plt.xlim([0,_tmax])
+# plt.ylim([1E-8,1E-4])
+plt.ylim([1E-8,1E1])
+plt.xlabel('$t$')
+plt.ylabel('$\Delta x$')
 
-
+plt.show()
 # Save all output figures
 types = ['',"poincare", "traj", "acorr", "lyapunov"]
 for i in plt.get_fignums():
+
+    # if not (types[i/100] == "acorr" or types[i/100] == "lyapunov"):
+    # if not (types[i/100] == "acorr"):
+    #     continue
+
+    print("Processing %s" % types[i/100])
+
     plt.figure(i)
+
     plt.tight_layout()
     plt.gca().tick_params(top='off', right='off', which='both')
     plt.gca().xaxis.set_major_locator(MaxNLocator(4))
     plt.gca().yaxis.set_major_locator(MaxNLocator(4))
 
-    if types[i/100] == "poincare":
-        continue
+    if types[i/100] == "lyapunov":
+        # plt.gca().set_yticks([1E-8, 1E-6, 1E-4])
+        plt.gca().set_yticks([1E-8, 1E-4, 1E0, 1E1])
+
 
     t = types[i/100]
-    # filename = ('images/nonchaotic_r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
-    filename = ('images/r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
+    filename = ('images/nonchaotic_r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
+    # filename = ('images/zoomed_r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
+    # filename = ('images/r%.1f_%s' % (m1/m2, t)).replace('.','_') + '.pdf'
 
     image = PdfPages(filename)
     image.savefig()
